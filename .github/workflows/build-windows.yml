@@ -1,0 +1,45 @@
+name: Build Collector POS Windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        working-directory: collector-pos-v3.0-desktop-preview
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          architecture: "x64"
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup -y --no-progress
+
+      - name: Show project files
+        shell: powershell
+        run: |
+          Write-Host "Current folder:"
+          Get-Location
+          Write-Host "Files:"
+          Get-ChildItem
+
+      - name: Build Collector POS
+        shell: powershell
+        run: .\build-windows.ps1
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v6
+        with:
+          name: CollectorPOS-Windows-Installer
+          path: collector-pos-v3.0-desktop-preview/dist-installer/*.exe
+          if-no-files-found: error
