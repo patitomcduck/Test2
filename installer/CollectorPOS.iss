@@ -64,7 +64,8 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 var
-  DataDir, EnvFile, Existing, NewText: String;
+  DataDir, EnvFile: String;
+  Existing, NewText: AnsiString;
 begin
   if CurStep = ssPostInstall then
   begin
