@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="{{ store.primary_color }}">
+  <title>{% block title %}{{ store.store_name }} · Collector POS{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <style>:root{--primary:{{ store.primary_color }};--secondary:{{ store.secondary_color }};--accent:{{ store.accent_color }};--green:var(--primary);--purple:var(--secondary);--blue:var(--accent);}</style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <a class="side-brand" href="{{ url_for('dashboard') }}"><img src="{{ url_for('brand_logo') }}" alt="{{ store.store_name }}"></a>
+    <nav class="side-nav">
+      <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}"><span class="nav-icon">⌂</span><span>Panel</span></a>
+      <a href="{{ url_for('pos') }}" class="{% if request.endpoint == 'pos' %}active{% endif %}"><span class="nav-icon">🛒</span><span>Venta</span></a>
+      <a href="{{ url_for('inventory') }}" class="{% if request.endpoint in ['inventory','inventory_new','inventory_edit','inventory_stock','inventory_adjust'] %}active{% endif %}"><span class="nav-icon">▣</span><span>Inventario</span></a>
+      {% if current_user and current_user.role in ['admin','manager'] %}
+      <a href="{{ url_for('tcg_import') }}" class="{% if request.endpoint == 'tcg_import' %}active{% endif %}"><span class="nav-icon">🃏</span><span>Importar TCG</span></a>
+      <a href="{{ url_for('trades') }}" class="{% if request.endpoint == 'trades' %}active{% endif %}"><span class="nav-icon">↻</span><span>Intercambios</span><em>{{ (store.trade_credit_rate*100)|round|int }}/{{ (store.trade_cash_rate*100)|round|int }}</em></a>
+      {% endif %}
+      <a href="{{ url_for('shifts') }}" class="{% if request.endpoint in ['shifts','shift_open','shift_close','shift_movement'] %}active{% endif %}"><span class="nav-icon">▤</span><span>Caja</span></a>
+      <a href="{{ url_for('sales') }}" class="{% if request.endpoint in ['sales','sale_detail','sale_return','receipt_print'] %}active{% endif %}"><span class="nav-icon">▥</span><span>Ventas</span></a>
+      <a href="{{ url_for('customers') }}" class="{% if request.endpoint in ['customers','customer_detail'] %}active{% endif %}"><span class="nav-icon">♙</span><span>Clientes</span></a>
+      <a href="{{ url_for('customer_display') }}" {% if desktop_mode %}onclick="event.preventDefault();window.pywebview.api.open_customer_display();"{% else %}target="_blank"{% endif %}><span class="nav-icon">▰</span><span>Pantalla cliente</span></a>
+      {% if current_user and current_user.role == 'admin' %}
+      <a href="{{ url_for('users') }}" class="{% if request.endpoint in ['users','user_new','user_pin','user_toggle'] %}active{% endif %}"><span class="nav-icon">♟</span><span>Usuarios</span></a>
+      <a href="{{ url_for('configuration') }}" class="{% if request.endpoint == 'configuration' %}active{% endif %}"><span class="nav-icon">⚙</span><span>Configuración</span></a>
+      <a href="{{ url_for('tools_support') }}" class="{% if request.endpoint in ['tools_support','backup_create','backup_restore','support_package'] %}active{% endif %}"><span class="nav-icon">⌘</span><span>Herramientas</span></a>
+      {% endif %}
+    </nav>
+    <div class="side-social"><strong>{{ store.store_name }}</strong>{% if store.social_handle %}<span>{{ store.social_handle }}</span>{% endif %}<small>Collector POS · v3.0 Desktop Preview</small></div>
+  </aside>
+  <section class="workspace">
+    <header class="topbar">
+      <div class="top-title"><span class="pokeball-mini"></span><div><strong>{{ store.store_name }}</strong><small>{{ store.store_subtitle }} · PUNTO DE VENTA</small></div></div>
+      <div class="top-actions">
+        <a class="shift-status {% if open_shift %}open{% else %}closed{% endif %}" href="{{ url_for('shifts') }}"><span class="status-light"></span><span>{% if open_shift %}{% if open_shift.event_mode %}EVENTO · {{ open_shift.event_name }}{% else %}TURNO ABIERTO{% endif %}<small>Turno #{{ open_shift.id }}</small>{% else %}CAJA CERRADA<small>Abrir turno</small>{% endif %}</span></a>
+        <div class="date-chip"><span>▦</span><div id="today-date">--/--/----</div></div>
+        <a class="customer-screen-btn" href="{{ url_for('customer_display') }}" {% if desktop_mode %}onclick="event.preventDefault();window.pywebview.api.open_customer_display();"{% else %}target="_blank"{% endif %}><span>▰</span><div>Pantalla cliente<small>{% if desktop_mode %}Abrir ventana nativa{% else %}Abrir en otra pantalla ↗{% endif %}</small></div></a>
+        {% if current_user %}<div class="user-chip"><span>●</span><div><strong>{{ current_user.name }}</strong><small>{{ role_label[current_user.role] }}</small></div><form method="post" action="{{ url_for('logout') }}"><button title="Cambiar usuario">↪</button></form></div>{% endif %}
+      </div>
+    </header>
+    <main class="page-shell">
+      {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack">{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </section>
+</div>
+<script>window.STORE_NAME={{ store.store_name|tojson }};window.TRADE_CREDIT_RATE={{ store.trade_credit_rate }};window.TRADE_CASH_RATE={{ store.trade_cash_rate }};(()=>{const e=document.getElementById('today-date');if(e)e.textContent=new Intl.DateTimeFormat('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date());})();</script>
+{% block scripts %}{% endblock %}
+</body></html>

@@ -1,0 +1,7 @@
+(async()=>{
+  const status=document.getElementById('detail-share-status'),email=document.getElementById('detail-email'),phone=document.getElementById('detail-phone'); let text='';
+  async function getText(){ if(text) return text; const r=await fetch(`/api/sales/${window.SALE_ID}/receipt`), d=await r.json(); text=d.text||''; return text; }
+  const digits=()=>phone.value.replace(/\D/g,'');
+  document.getElementById('detail-send-email').addEventListener('click',async()=>{ const to=email.value.trim(); if(!to){ status.textContent='Escribe un correo.'; return; } status.textContent='Enviando…'; const body=await getText(); try { const r=await fetch(`/api/sales/${window.SALE_ID}/email`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:to})}), d=await r.json(); if(!r.ok){ if(d.fallback){ location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(`Tu recibo ${window.STORE_NAME}`)}&body=${encodeURIComponent(body)}`; status.textContent='SMTP no configurado; abrí tu app de correo.'; return; } throw new Error(d.error||'Error'); } status.textContent='✓ Correo enviado.'; } catch(e){ status.textContent=e.message; } });
+  document.getElementById('detail-whatsapp').addEventListener('click',async()=>{ const p=digits(), t=encodeURIComponent(await getText()); window.open(p?`https://wa.me/${p}?text=${t}`:`https://wa.me/?text=${t}`,'_blank'); });
+})();

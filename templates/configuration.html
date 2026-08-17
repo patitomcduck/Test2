@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Configuración · {{ store.store_name }}{% endblock %}
+{% block content %}
+<div class="section-head page-title"><div><div class="eyebrow">CONFIGURACIÓN DE MARCA</div><h1>Configuración de tienda</h1><p>Cambia la marca y la pantalla del cliente sin tocar código. Las funciones del POS se mantienen iguales.</p></div><div class="inline-actions"><a class="btn secondary" href="{{ url_for('customer_display') }}" target="_blank">Vista previa cliente ↗</a></div></div>
+<form class="settings-layout" method="post" enctype="multipart/form-data">
+<section class="panel form-card">
+  <div class="eyebrow">IDENTIDAD</div><h2>Marca de la tienda</h2>
+  <div class="settings-logo-row"><img src="{{ url_for('brand_logo') }}" alt=""><div><label>Logo<input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label><small>PNG, JPG o WEBP. Recomendado: fondo transparente.</small></div></div>
+  <div class="form-grid two"><label>Nombre de tienda<input name="store_name" value="{{ settings.store_name }}" required></label><label>Red social / usuario<input name="social_handle" value="{{ settings.social_handle or '' }}" placeholder="@mitienda"></label></div>
+  <label>Subtítulo<input name="store_subtitle" value="{{ settings.store_subtitle }}" placeholder="TCG · COLECCIONABLES · HOBBIES"></label>
+  <label>Mensaje al pie del recibo<input name="receipt_footer" value="{{ settings.receipt_footer or '' }}"></label>
+</section>
+<section class="panel form-card">
+  <div class="eyebrow">TEMA</div><h2>Colores</h2>
+  <div class="color-settings"><label>Principal <small>Acciones, selección y totales</small><div><input id="theme-primary" type="color" name="primary_color" value="{{ settings.primary_color }}"><code>{{ settings.primary_color }}</code></div></label><label>Secundario <small>Carrito, tarjeta e intercambios</small><div><input id="theme-secondary" type="color" name="secondary_color" value="{{ settings.secondary_color }}"><code>{{ settings.secondary_color }}</code></div></label><label>Acento <small>Información y detalles destacados</small><div><input id="theme-accent" type="color" name="accent_color" value="{{ settings.accent_color }}"><code>{{ settings.accent_color }}</code></div></label></div>
+  <div class="theme-preview" id="theme-preview"><div class="theme-preview-primary"><span>Principal</span><strong>COBRAR</strong></div><div class="theme-preview-secondary"><span>Secundario</span><strong>TARJETA</strong></div><div class="theme-preview-accent"><span>Acento</span><strong>PANTALLA</strong></div></div>
+  <p class="muted">La vista previa cambia al instante. Presiona <strong>Guardar toda la personalización</strong> para aplicarlo al resto del POS.</p>
+  <div class="eyebrow settings-subhead">INTERCAMBIOS</div>
+  <div class="form-grid two"><label>Crédito en producto (%)<input type="number" name="trade_credit_percent" min="0" max="100" step="1" value="{{ (settings.trade_credit_rate*100)|round|int }}"></label><label>Efectivo (%)<input type="number" name="trade_cash_percent" min="0" max="100" step="1" value="{{ (settings.trade_cash_rate*100)|round|int }}"></label></div>
+  <div class="eyebrow settings-subhead">LICENCIA</div>
+  <label>Código de licencia<input name="license_key" value="{{ settings.license_key or '' }}" placeholder="Código de licencia"></label>
+  <p class="muted">Código opcional para identificar la instalación. No contiene datos personales de la tienda.</p>
+</section>
+
+<section class="panel form-card pricing-settings-card">
+  <div class="section-head compact"><div><div class="eyebrow">PRECIOS TCG</div><h2>Actualización automática</h2></div><span class="pill">00:00 · 12:00 · 17:00</span></div>
+  <p class="muted">Las cartas vinculadas a TCGdex/JustTCG se revisan tres veces al día. El precio de venta puede seguir automáticamente el mercado convertido a MXN.</p>
+  <div class="form-grid two"><label>Zona horaria<input name="store_timezone" value="{{ settings.store_timezone or 'UTC' }}"><small class="muted">Usa una zona horaria IANA, por ejemplo America/Mexico_City.</small></label><label>Tipo de cambio USD → MXN<input name="usd_mxn_rate" type="number" min="0.01" step="0.0001" value="{{ settings.usd_mxn_rate or 17 }}"><small class="muted">Se usa como respaldo si no hay conexión.</small></label></div>
+  <div class="form-grid two"><label class="check-line"><input type="checkbox" name="auto_fx_enabled" {% if settings.auto_fx_enabled %}checked{% endif %}> <span>Actualizar tipo de cambio automáticamente</span></label><label class="check-line"><input type="checkbox" name="auto_price_tcg_enabled" {% if settings.auto_price_tcg_enabled %}checked{% endif %}> <span>Actualizar también el precio de venta MXN</span></label></div>
+  <div class="form-grid two"><label>Multiplicador de precio<input name="auto_price_multiplier" type="number" min="0.01" step="0.01" value="{{ settings.auto_price_multiplier or 1 }}"><small class="muted">1.00 = mercado. 1.10 = mercado +10%.</small></label><label>Redondear al múltiplo de<input name="auto_price_round_to" type="number" min="0.01" step="0.01" value="{{ settings.auto_price_round_to or 1 }}"><small class="muted">Ej. 5 redondea a $5 MXN.</small></label></div>
+  <div class="price-sync-status"><div><span>Última actualización</span><strong>{{ settings.last_price_refresh_at or 'Aún no se ha ejecutado' }}</strong><small>{{ settings.last_price_refresh_status or '' }}</small></div><div><span>Tipo de cambio guardado</span><strong>${{ settings.usd_mxn_rate|money }} MXN/USD</strong><small>{% if settings.fx_updated_at %}Referencia {{ settings.fx_updated_at }}{% else %}Valor configurado{% endif %}</small></div></div>
+  <button type="button" id="price-refresh-now" class="btn secondary">Actualizar precios ahora</button><span id="price-refresh-message" class="muted"></span>
+</section>
+
+<section class="panel form-card customer-settings-card">
+  <div class="section-head compact"><div><div class="eyebrow">PANTALLA DEL CLIENTE</div><h2>Pantalla de espera</h2></div><a class="btn secondary" href="{{ url_for('customer_display') }}" target="_blank">Abrir pantalla ↗</a></div>
+  <p class="muted">Estos textos aparecen cuando no hay una venta o intercambio activo.</p>
+  <div class="customer-promo-setting"><img src="{{ url_for('customer_promo') }}" alt=""><div><label>Imagen promocional / publicidad<input type="file" name="customer_promo" accept="image/png,image/jpeg,image/webp"></label><small>Opcional. Si no subes una, se usa el logo.</small></div></div>
+  <div class="form-grid two"><label>Etiqueta del encabezado<input name="customer_header_label" value="{{ settings.customer_header_label }}" placeholder="PUNTO DE VENTA"></label><label>Saludo pequeño<input name="customer_welcome_label" value="{{ settings.customer_welcome_label }}" placeholder="BIENVENIDO"></label></div>
+  <label>Título principal<input name="customer_welcome_title" value="{{ settings.customer_welcome_title }}"></label>
+  <label>Texto / categorías<input name="customer_welcome_text" value="{{ settings.customer_welcome_text }}"></label>
+  <div class="form-grid three"><label>Sello 1<input name="customer_badge_1" value="{{ settings.customer_badge_1 }}"></label><label>Sello 2<input name="customer_badge_2" value="{{ settings.customer_badge_2 }}"></label><label>Sello 3<input name="customer_badge_3" value="{{ settings.customer_badge_3 }}"></label></div>
+  <div class="form-grid two"><label>Mensaje de ayuda<input name="customer_help_title" value="{{ settings.customer_help_title }}"></label><label>Texto de ayuda<input name="customer_help_text" value="{{ settings.customer_help_text }}"></label></div>
+</section>
+
+<section class="panel form-card customer-settings-card">
+  <div class="eyebrow">PANTALLA DEL CLIENTE</div><h2>Venta terminada y pie de pantalla</h2>
+  <label>Mensaje de agradecimiento<input name="customer_thanks_title" value="{{ settings.customer_thanks_title }}"></label>
+  <label>Texto de recibo digital<input name="customer_receipt_note" value="{{ settings.customer_receipt_note }}"></label>
+  <div class="form-grid three"><label>Pie 1<input name="customer_footer_1" value="{{ settings.customer_footer_1 }}"></label><label>Pie 2<input name="customer_footer_2" value="{{ settings.customer_footer_2 }}"></label><label>Pie 3<input name="customer_footer_3" value="{{ settings.customer_footer_3 }}"></label></div>
+  <div class="customer-settings-note"><strong>Ventas e intercambios</strong><p>Los artículos, totales, método de pago y porcentajes de intercambio siguen siendo automáticos. Aquí solo personalizas la presentación de la tienda.</p></div>
+  <button class="btn primary full" style="margin-top:14px">Guardar toda la personalización</button>
+</section>
+</form>
+{% endblock %}
+
+{% block scripts %}<script>(()=>{
+const map=[['theme-primary','--primary','--green'],['theme-secondary','--secondary','--purple'],['theme-accent','--accent','--blue']];map.forEach(([id,a,b])=>{const input=document.getElementById(id);if(!input)return;const code=input.parentElement.querySelector('code');const apply=()=>{document.documentElement.style.setProperty(a,input.value);document.documentElement.style.setProperty(b,input.value);if(code)code.textContent=input.value.toUpperCase();};input.addEventListener('input',apply);});
+const btn=document.getElementById('price-refresh-now'),msg=document.getElementById('price-refresh-message');if(btn){btn.addEventListener('click',async()=>{btn.disabled=true;msg.textContent='Actualizando catálogo TCG…';try{const r=await fetch('/api/prices/refresh',{method:'POST'}),d=await r.json();if(!r.ok)throw new Error(d.error||'No se pudo actualizar');msg.textContent=`✓ ${d.updated} de ${d.checked} productos cambiaron · ${d.errors} errores · USD/MXN ${Number(d.fx_rate||0).toFixed(4)}`;}catch(e){msg.textContent=e.message;}finally{btn.disabled=false;}});}
+})();</script>{% endblock %}

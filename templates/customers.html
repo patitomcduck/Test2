@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Clientes · {{ store.store_name }}{% endblock %}
+{% block content %}
+<div class="section-head page-title"><div><div class="eyebrow">CLIENTES</div><h1>Clientes y crédito de tienda</h1><p>El crédito generado por intercambios queda asociado al cliente y puede usarse después en una venta.</p></div></div>
+<div class="customer-admin-grid">
+<section class="panel form-card"><div class="eyebrow">NUEVO CLIENTE</div><h2>Agregar cliente</h2><form method="post" action="{{ url_for('customer_new') }}"><div class="form-grid two"><label>Nombre<input name="name" required></label><label>WhatsApp<input name="phone" placeholder="+52..."></label></div><label>Correo<input name="email" type="email"></label><label>Notas<textarea name="notes" rows="3"></textarea></label><button class="btn primary full">Guardar cliente</button></form></section>
+<section class="panel"><div class="section-head compact"><div><div class="eyebrow">DIRECTORIO</div><h2>{{ customers|length }} clientes</h2></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Contacto</th><th>Crédito</th><th>Ventas</th><th></th></tr></thead><tbody>{% for c in customers %}<tr><td><strong>{{ c.name }}</strong></td><td>{{ c.phone or c.email or '—' }}</td><td><strong class="stock">${{ c.credit_balance|money }}</strong></td><td>{{ c.sales_count }}</td><td><a class="btn secondary small" href="{{ url_for('customer_detail',customer_id=c.id) }}">Ver</a></td></tr>{% else %}<tr><td colspan="5">Aún no hay clientes.</td></tr>{% endfor %}</tbody></table></div></section>
+</div>
+{% endblock %}

@@ -1,0 +1,4 @@
+Flask>=3.0,<4
+requests>=2.31,<3
+pywebview>=6.2,<7
+pyinstaller>=6.15,<7

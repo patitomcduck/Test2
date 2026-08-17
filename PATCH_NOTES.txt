@@ -1,0 +1,10 @@
+Collector POS 3.0.0 Desktop Preview
+
+- Ventana nativa de Windows mediante pywebview.
+- Backend local integrado: no requiere Docker en la instalación final.
+- Datos persistentes en LocalAppData.
+- Pantalla cliente en una segunda ventana nativa o por LAN.
+- Tareas programadas de precios (00:00, 12:00, 17:00) y respaldo (02:30).
+- Proyecto PyInstaller para generar CollectorPOS.exe.
+- Proyecto Inno Setup para CollectorPOS-Setup.exe.
+- Conserva todas las funciones de V2.3.

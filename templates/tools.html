@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Herramientas · {{ store.store_name }}
+{% if desktop_mode %}
+<div class="panel form-card desktop-runtime-card">
+  <div class="eyebrow">COLLECTOR POS DESKTOP</div>
+  <h2>Aplicación de escritorio</h2>
+  <p class="muted">El POS se está ejecutando como aplicación nativa. La pantalla del cliente sigue disponible en la red local.</p>
+  <div class="diagnostic-box">
+    <p><span>Puerto local</span><strong>{{ desktop_port }}</strong></p>
+    <p><span>Pantalla cliente</span><strong>{% if desktop_lan_ip %}http://{{ desktop_lan_ip }}:{{ desktop_port }}/cliente{% else %}Disponible desde el botón Pantalla cliente{% endif %}</strong></p>
+  </div>
+  <div class="inline-actions">
+    <button type="button" class="btn primary" onclick="window.pywebview.api.open_customer_display()">Abrir pantalla cliente</button>
+    <button type="button" class="btn secondary" onclick="window.pywebview.api.open_data_folder()">Abrir carpeta de datos</button>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="section-head page-title"><div><div class="eyebrow">ADMINISTRACIÓN</div><h1>Respaldos, exportación y diagnóstico</h1><p>Herramientas para proteger los datos de la tienda y simplificar soporte técnico.</p></div><a class="btn secondary" href="{{ url_for('support_package') }}">Descargar diagnóstico</a></div>
+<div class="metric-grid five"><div class="metric-card green"><small>Base de datos</small><strong>{{ 'OK' if integrity == 'ok' else integrity }}</strong><em>Integridad</em></div><div class="metric-card purple"><small>Productos</small><strong>{{ counts.products }}</strong><em>registros</em></div><div class="metric-card blue"><small>Ventas</small><strong>{{ counts.sales }}</strong><em>registros</em></div><div class="metric-card yellow"><small>Clientes</small><strong>{{ counts.customers }}</strong><em>registros</em></div><div class="metric-card"><small>JustTCG</small><strong>{{ 'OK' if justtcg else 'Pendiente' }}</strong><em>configuración</em></div></div>
+<div class="dashboard-grid fancy">
+<section class="panel form-card"><div class="eyebrow">RESPALDOS</div><h2>Protección de datos</h2><p class="muted">El servicio crea un respaldo automático diario y conserva los más recientes. También puedes crear uno antes de hacer cambios importantes.</p><form method="post" action="{{ url_for('backup_create') }}"><button class="btn primary">Crear respaldo ahora</button></form><div class="backup-list">{% for b in backups %}<a href="{{ url_for('backup_download',filename=b.name) }}"><span>{{ b.name }}</span><strong>{{ (b.stat().st_size/1024/1024)|round(2) }} MB</strong></a>{% else %}<p class="muted">Todavía no hay respaldos.</p>{% endfor %}</div><details class="danger-zone"><summary>Restaurar respaldo</summary><form method="post" action="{{ url_for('backup_restore') }}" enctype="multipart/form-data"><label>Archivo ZIP<input type="file" name="backup" accept=".zip" required></label><p class="muted">Antes de restaurar, Collector POS crea automáticamente un respaldo de seguridad del estado actual.</p><button class="btn danger">Restaurar</button></form></details></section>
+<section class="panel form-card"><div class="eyebrow">EXPORTAR</div><h2>Tus datos son tuyos</h2><p class="muted">Descarga CSV compatibles con Excel, Numbers y Google Sheets.</p><div class="export-grid"><a class="btn secondary" href="{{ url_for('export_csv',kind='inventario') }}">Inventario</a><a class="btn secondary" href="{{ url_for('export_csv',kind='ventas') }}">Ventas</a><a class="btn secondary" href="{{ url_for('export_csv',kind='clientes') }}">Clientes</a><a class="btn secondary" href="{{ url_for('export_csv',kind='turnos') }}">Turnos</a><a class="btn secondary" href="{{ url_for('export_csv',kind='intercambios') }}">Intercambios</a></div><div class="diagnostic-box"><h3>Estado del sistema</h3><p><span>Espacio libre</span><strong>{{ (disk_free/1024/1024/1024)|round(1) }} GB</strong></p><p><span>Actualizador de precios</span><strong>{{ last_price.status if last_price else 'Sin ejecuciones' }}</strong></p><p><span>Zona horaria</span><strong>{{ settings.store_timezone }}</strong></p><a class="btn primary full" href="{{ url_for('support_package') }}">Generar paquete de soporte</a><small>No incluye API keys, PINs ni la base de datos completa.</small></div></section>
+</div>
+
+{% if desktop_mode %}
+<div class="panel form-card desktop-runtime-card">
+  <div class="eyebrow">COLLECTOR POS DESKTOP</div>
+  <h2>Aplicación de escritorio</h2>
+  <p class="muted">El POS se está ejecutando como aplicación nativa. La pantalla del cliente sigue disponible en la red local.</p>
+  <div class="diagnostic-box">
+    <p><span>Puerto local</span><strong>{{ desktop_port }}</strong></p>
+    <p><span>Pantalla cliente</span><strong>{% if desktop_lan_ip %}http://{{ desktop_lan_ip }}:{{ desktop_port }}/cliente{% else %}Disponible desde el botón Pantalla cliente{% endif %}</strong></p>
+  </div>
+  <div class="inline-actions">
+    <button type="button" class="btn primary" onclick="window.pywebview.api.open_customer_display()">Abrir pantalla cliente</button>
+    <button type="button" class="btn secondary" onclick="window.pywebview.api.open_data_folder()">Abrir carpeta de datos</button>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

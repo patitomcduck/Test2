@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Intercambios · {{ store.store_name }}{% endblock %}
+{% block content %}
+<div class="section-head page-title">
+  <div>
+    <div class="eyebrow">{{ store.store_name|upper }} · COMPRA / VENTA / INTERCAMBIO</div>
+    <h1>Compras e intercambios</h1>
+    <p>Las cartas TCG ahora se pueden <strong>vincular al catálogo y precio del API</strong>. Al aceptarlas, se guardan con set, número, impresión, condición, imagen y vínculo para futuras actualizaciones de precio.</p>
+  </div>
+</div>
+{% if not shift %}<div class="info-strip warning-strip">Abre un turno antes de registrar compras o intercambios. <a href="{{ url_for('shifts') }}">Abrir caja</a></div>{% endif %}
+<div class="trade-layout">
+  <section class="panel trade-builder">
+    <div class="section-head compact"><div><div class="eyebrow">PASO 1 · COTIZACIÓN</div><h2>Nueva operación</h2></div><button id="trade-add-row" class="btn secondary">+ Artículo</button></div>
+    <div class="trade-guide"><strong>TCG:</strong> escribe la carta y pulsa <b>Buscar en API</b>. Para Hot Wheels, Funko u otros coleccionables puedes seguir capturando el valor manualmente. Tipo de cambio de referencia: <strong>${{ store.usd_mxn_rate|money }} MXN/USD</strong>.</div>
+    <div id="trade-items"></div>
+    <div class="trade-payout">
+      <button class="trade-choice active" data-payout="credit" type="button"><span>Crédito en producto</span><strong>{{ (store.trade_credit_rate*100)|round|int }}%</strong><small id="credit-total">$0.00</small></button>
+      <button class="trade-choice" data-payout="cash" type="button"><span>Efectivo</span><strong>{{ (store.trade_cash_rate*100)|round|int }}%</strong><small id="cash-total">$0.00</small></button>
+    </div>
+    <div class="form-grid two"><label>Cliente<select id="trade-customer-id"><option value="">Sin cliente / pago en efectivo</option>{% for c in customers %}<option value="{{ c.id }}">{{ c.name }} · crédito actual ${{ c.credit_balance|money }}</option>{% endfor %}</select><small class="muted">Para crédito en producto es obligatorio seleccionar cliente.</small></label><label>Notas (opcional)<input id="trade-notes" placeholder="Detalles generales de la operación"></label></div>
+    <div class="trade-summary"><span>Valor de mercado total <strong id="trade-market-total">$0.00</strong></span><span>Oferta seleccionada <strong id="trade-offer-total">$0.00</strong></span></div>
+    <div class="trade-selected-summary">Oferta elegida: <strong id="trade-selected-copy">Crédito en producto</strong></div>
+    <button id="trade-submit" class="btn primary checkout-btn" {% if not shift %}disabled{% endif %}>Aceptar e ingresar a inventario</button><div id="trade-status" class="checkout-message"></div>
+  </section>
+  <section class="panel dash-panel trade-help">
+    <div class="eyebrow">REGLA DE LA TIENDA</div><h2>La matemática siempre visible</h2>
+    <div class="rate-card"><span>Crédito en producto</span><strong>{{ (store.trade_credit_rate*100)|round|int }}%</strong><small>del valor de mercado capturado</small></div>
+    <div class="rate-card"><span>Efectivo</span><strong>{{ (store.trade_cash_rate*100)|round|int }}%</strong><small>del valor de mercado capturado</small></div>
+    <p class="muted">Cuando una carta está vinculada al API:</p><ul class="trade-help-list"><li>Se guarda toda la información de la carta.</li><li>Se reutiliza el producto existente si ya tienes la misma variante.</li><li>Queda habilitada para actualización automática de mercado.</li><li>El costo de adquisición sigue siendo la oferta real que pagaste.</li></ul>
+  </section>
+</div>
+<div class="section-head page-title sub-title"><div><div class="eyebrow">HISTORIAL</div><h2>Operaciones recientes</h2></div></div>
+<div class="table-wrap panel"><table><thead><tr><th>Folio</th><th>Fecha</th><th>Cliente</th><th>Empleado</th><th>Valor mercado</th><th>Tipo</th><th>Oferta</th></tr></thead><tbody>{% for t in recent %}<tr><td><strong>{{ t.trade_number }}</strong></td><td>{{ t.created_at[:16].replace('T',' ') }}</td><td>{{ t.customer_display_name or t.customer_name or '—' }}</td><td>{{ t.employee_name or '—' }}</td><td>${{ t.market_total_mxn|money }}</td><td><span class="pill">{{ ('Crédito ' ~ ((store.trade_credit_rate*100)|round|int) ~ '%') if t.payout_type == 'credit' else ('Efectivo ' ~ ((store.trade_cash_rate*100)|round|int) ~ '%') }}</span></td><td><strong>${{ t.offer_total_mxn|money }}</strong></td></tr>{% else %}<tr><td colspan="7">Aún no hay intercambios.</td></tr>{% endfor %}</tbody></table></div>
+
+<template id="trade-row-template">
+  <div class="trade-item-row">
+    <div class="trade-row-top trade-api-top">
+      <label>Artículo / carta<input data-field="name" placeholder="Ej. Charmander 044" required></label>
+      <label>Juego TCG<input data-field="game" value="Pokemon" placeholder="Pokemon, One Piece, Magic…"></label>
+      <button class="btn secondary trade-api-search" type="button">Buscar en API</button>
+      <button class="text-btn danger trade-remove" type="button">Quitar</button>
+    </div>
+    <div class="form-grid four trade-basic-grid">
+      <label>Categoría<select data-field="category"><option>TCG</option><option>Hot Wheels</option><option>Funko</option><option value="Figure">Figuras</option><option value="Other">Otro</option></select></label>
+      <label>Condición<select data-field="condition"><option value="Near Mint">Casi nueva (NM)</option><option value="Lightly Played">Ligeramente jugada (LP)</option><option value="Moderately Played">Moderadamente jugada (MP)</option><option value="Heavily Played">Muy jugada (HP)</option><option value="Damaged">Dañada (DMG)</option></select></label>
+      <label>Cantidad<input data-field="qty" type="number" min="1" value="1"></label>
+      <label>Valor de mercado total MXN<input data-field="market_total" type="number" min="0" step="0.01" value="0"></label>
+    </div>
+    <div class="form-grid two"><label>Precio de venta total MXN <span class="muted">(se sugiere desde API)</span><input data-field="sell_total" type="number" min="0" step="0.01" value="0"></label><label>SKU existente o personalizado <span class="muted">(opcional)</span><input data-field="sku" placeholder="Vacío = automático / detecta variante"></label></div>
+    <div class="trade-api-link" data-api-link hidden></div>
+    <div class="trade-api-results" data-api-results hidden></div>
+  </div>
+</template>
+{% endblock %}
+{% block scripts %}<script>window.TRADE_CREDIT_RATE={{ store.trade_credit_rate }};window.TRADE_CASH_RATE={{ store.trade_cash_rate }};window.USD_MXN_RATE={{ store.usd_mxn_rate or 17 }};</script><script src="{{ url_for('static', filename='trades.js') }}"></script>{% endblock %}

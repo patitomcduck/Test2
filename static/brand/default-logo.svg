@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+<rect width="600" height="600" rx="96" fill="#070B0F"/>
+<rect x="105" y="155" width="390" height="280" rx="34" fill="none" stroke="#7DD3FC" stroke-width="18"/>
+<path d="M185 235h230M185 300h230M185 365h145" stroke="#E5E7EB" stroke-width="22" stroke-linecap="round"/>
+<circle cx="425" cy="365" r="42" fill="#34D399"/>
+<text x="300" y="105" text-anchor="middle" fill="#F8FAFC" font-family="Arial,sans-serif" font-size="58" font-weight="900">COLLECTOR</text>
+<text x="300" y="525" text-anchor="middle" fill="#7DD3FC" font-family="Arial,sans-serif" font-size="70" font-weight="900">POS</text>
+</svg>

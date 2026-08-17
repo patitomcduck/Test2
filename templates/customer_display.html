@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050805"><title>Pantalla cliente · {{ store.store_name }}</title><link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}"><style>:root{--primary:{{ store.primary_color }};--secondary:{{ store.secondary_color }};--accent:{{ store.accent_color }};--green:var(--primary);--purple:var(--secondary);--blue:var(--accent);}</style></head>
+<body class="customer-display-body">
+<div class="customer-display" id="customer-display">
+  <header class="customer-header"><img src="{{ url_for('brand_logo') }}" alt="{{ store.store_name }}"><div class="customer-brand"><strong>{{ store.store_name }}</strong><span>{{ store.customer_header_label }}</span><small>{{ store.store_subtitle }}</small></div><div class="pixel-stars">✦　⚡　♦</div></header>
+
+  <section id="customer-idle" class="customer-idle">
+    <div class="idle-copy"><span class="eyebrow">{{ store.customer_welcome_label }}</span><h1>{{ store.customer_welcome_title }}</h1><p>{{ store.customer_welcome_text }}</p><div class="idle-badges"><span>{{ store.customer_badge_1 }}</span><span>{{ store.customer_badge_2 }}</span><span>{{ store.customer_badge_3 }}</span></div></div>
+    <img src="{{ url_for('customer_promo') }}" alt="" class="idle-logo">
+    <footer><div><strong>{{ store.customer_help_title }}</strong><span>{{ store.customer_help_text }}</span></div><div class="social-handle">{{ store.social_handle or store.store_name }}</div></footer>
+  </section>
+
+  <section id="customer-sale" class="customer-sale" hidden>
+    <div class="customer-purchase panel-pixel"><div class="customer-section-title"><span class="cart-pixel">🛒</span><strong>TU COMPRA</strong><small id="customer-item-count">0 artículos</small></div><div id="customer-items" class="customer-items"></div></div>
+    <div class="customer-totals panel-pixel"><div class="customer-money-row"><span>SUBTOTAL</span><strong id="customer-subtotal">$0.00</strong></div><div class="customer-money-row purple-text"><span>DESCUENTO</span><strong id="customer-discount">−$0.00</strong></div><div class="customer-total"><span>TOTAL</span><strong id="customer-total">$0.00</strong></div><div class="customer-payment"><div><span>MÉTODO DE PAGO</span><strong id="customer-payment-method">Efectivo</strong></div><div><span>RECIBIDO</span><strong id="customer-received">—</strong></div><div class="change"><span>CAMBIO</span><strong id="customer-change">$0.00</strong></div></div></div>
+  </section>
+
+  <section id="customer-trade" class="customer-trade" hidden>
+    <div class="trade-customer-card panel-pixel"><span class="eyebrow">COMPRA / INTERCAMBIO</span><h1>Tu cotización</h1><p id="trade-display-items-copy">Captura el artículo y su valor de mercado.</p><strong id="trade-display-market">$0.00</strong></div>
+    <div class="trade-options-display"><div id="trade-option-credit" class="trade-display-option"><span>CRÉDITO EN PRODUCTO</span><strong id="trade-credit-rate">{{ (store.trade_credit_rate*100)|round|int }}%</strong><b id="trade-display-credit">$0.00</b></div><div id="trade-option-cash" class="trade-display-option cash"><span>EFECTIVO</span><strong id="trade-cash-rate">{{ (store.trade_cash_rate*100)|round|int }}%</strong><b id="trade-display-cash">$0.00</b></div></div>
+    <div id="trade-display-selected" class="trade-selected">Selecciona una opción con el encargado.</div>
+  </section>
+
+  <section id="customer-thanks" class="customer-thanks" hidden><div class="thanks-star">★</div><h1>{{ store.customer_thanks_title }}</h1><strong id="thanks-total">$0.00</strong><p id="thanks-sale-number"></p><span>{{ store.customer_receipt_note }}</span><div class="social-handle">{{ store.social_handle or store.store_name }}</div></section>
+
+  <footer class="customer-footer"><div>♥ {{ store.customer_footer_1 }}</div><div>◆ {{ store.customer_footer_2 }}</div><div>▣ {{ store.customer_footer_3 }}</div></footer>
+</div>
+<script>window.TRADE_CREDIT_RATE={{ store.trade_credit_rate }};window.TRADE_CASH_RATE={{ store.trade_cash_rate }};</script><script src="{{ url_for('static', filename='customer-display.js') }}"></script>
+</body></html>

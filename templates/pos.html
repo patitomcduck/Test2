@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Venta · {{ store.store_name }}{% endblock %}
+{% block content %}
+{% if not shift %}
+<div class="register-lock panel"><div class="lock-icon">$</div><div><span class="eyebrow">CAJA CERRADA</span><h2>Abre un turno antes de cobrar</h2><p>Puedes consultar el inventario, pero no completar ventas hasta abrir caja.</p></div><a class="btn neon" href="{{ url_for('shifts') }}">Abrir turno</a></div>
+{% endif %}
+<div class="pos-grid {% if not shift %}pos-locked{% endif %}">
+  <section class="catalog-panel">
+    <div class="page-heading sale-heading"><div><span class="eyebrow">PUNTO DE VENTA</span><h1>Nueva venta</h1><p>Busca, escanea o toca un producto para agregarlo.</p></div><div class="live-chip"><i></i>{% if shift %}{% if shift.event_mode %}Modo evento · {{ shift.event_name }}{% else %}Turno #{{ shift.id }}{% endif %}{% else %}Solo consulta{% endif %}</div></div>
+    <div class="search-row"><div class="search-box"><span>⌕</span><input id="product-search" autocomplete="off" placeholder="Buscar producto, carta o escanear SKU…"></div><button id="clear-search" class="btn dark">Limpiar</button></div>
+    <div class="quick-filters" id="quick-filters"><button class="chip active" data-category="all">Todo</button><button class="chip" data-category="TCG">TCG</button><button class="chip" data-category="Hot Wheels">Hot Wheels</button><button class="chip" data-category="Funko">Funko</button><button class="chip" data-category="Figure">Figuras</button><button class="chip" data-category="Other">Otro</button></div>
+    <div id="product-grid" class="product-grid">
+      {% for p in products %}
+      <button class="product-card{% if p.image_url %} has-art{% endif %}" data-id="{{ p.id }}" data-name="{{ p.name|e }}" data-sku="{{ p.sku|e }}" data-category="{{ p.category|e }}" data-price="{{ p.price_mxn }}" data-stock="{{ p.qty }}" data-image="{{ (p.image_url or '')|e }}" data-meta="{{ ((p.game or '') ~ ' ' ~ (p.set_name or '') ~ ' ' ~ (p.condition or '') ~ ' ' ~ (p.printing or ''))|e }}">
+        <div class="product-image">{% if p.image_url %}<img src="{{ p.image_url }}" alt="" loading="lazy">{% else %}<span>▣</span>{% endif %}</div>
+        <div class="product-info"><small>{{ p.category|category_es }}{% if p.game %} · {{ p.game }}{% endif %}</small><strong>{{ p.name }}</strong><em>{{ p.sku }}</em><div><b>${{ p.price_mxn|money }}</b><span>{{ p.qty }} stock</span></div></div>
+      </button>
+      {% else %}
+      <div class="empty-state"><h3>Aún no hay inventario</h3><p>Importa una carta TCG o agrega un producto manualmente.</p><div class="inline-actions"><a class="btn neon" href="{{ url_for('tcg_import') }}">Importar TCG</a><a class="btn dark" href="{{ url_for('inventory_new') }}">Agregar producto</a></div></div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <aside class="cart-panel">
+    <div class="cart-title"><div><span>♟</span><strong>VENTA ACTUAL</strong></div><button id="empty-cart" class="icon-btn danger" title="Vaciar carrito">⌫</button></div>
+    <div id="cart-items" class="cart-items"><div class="cart-empty"><span>🛒</span><strong>Carrito vacío</strong><small>Agrega un producto para comenzar</small></div></div>
+    <div class="cart-bottom">
+      <label class="discount-row"><span>Descuento</span><input id="discount" type="number" min="0" step="0.01" value="0"></label>
+      <div class="totals"><div><span>Subtotal</span><strong id="subtotal">$0.00</strong></div><div class="discount-total"><span>Descuento</span><strong id="discount-display">−$0.00</strong></div><div class="grand-total"><span>TOTAL</span><strong id="total">$0.00</strong></div></div>
+      <div class="customer-credit-sale"><label class="field-label">Cliente / crédito de tienda</label><select id="sale-customer"><option value="">Venta sin cliente</option>{% for c in customers %}<option value="{{ c.id }}" data-credit="{{ c.credit_balance }}" data-email="{{ c.email or '' }}" data-phone="{{ c.phone or '' }}">{{ c.name }} · crédito ${{ c.credit_balance|money }}</option>{% endfor %}</select><div id="credit-sale-row" class="credit-sale-row" hidden><div><span>Crédito disponible</span><strong id="credit-available">$0.00</strong></div><label>Usar<input id="credit-use" type="number" min="0" step="0.01" value="0"></label><div><span>Restante</span><strong id="credit-remaining">$0.00</strong></div></div><a class="customer-new-link" href="{{ url_for('customers') }}">+ Administrar clientes</a></div>
+      <label class="field-label">Método de pago para el restante</label>
+      <div class="payment-tabs"><button class="payment-btn active" data-method="cash">Efectivo</button><button class="payment-btn" data-method="card">Tarjeta</button><button class="payment-btn" data-method="other">Otro</button></div>
+      <div id="cash-box" class="cash-box"><label><span>Recibido</span><input id="cash-received" type="number" min="0" step="0.01" placeholder="$0.00"></label><div class="change-preview"><span>Cambio</span><strong id="change-preview">$0.00</strong></div></div>
+      <details class="receipt-options"><summary>Recibo digital · Correo o WhatsApp</summary><div class="form-grid two"><label>Correo<input id="customer-email" type="email" placeholder="cliente@correo.com"></label><label>WhatsApp<input id="customer-phone" inputmode="tel" placeholder="Número con código de país"></label></div></details>
+      <button id="checkout" class="checkout-btn" {% if not shift %}disabled{% endif %}><span>⚡</span> COBRAR</button>
+      <div id="checkout-message" class="checkout-message"></div>
+    </div>
+  </aside>
+</div>
+
+<dialog id="receipt-dialog" class="dialog-card receipt-share-card"><div class="dialog-close-row"><div><span class="eyebrow">VENTA COMPLETADA</span><h2 id="receipt-title">Recibo</h2></div><button class="dialog-close" onclick="this.closest('dialog').close()">×</button></div><pre id="receipt-preview" class="receipt-preview"></pre><div class="receipt-share-actions"><button id="receipt-email" class="btn neon">Correo</button><button id="receipt-whatsapp" class="btn dark">WhatsApp</button></div><div id="receipt-share-status" class="checkout-message"></div><button id="receipt-new-sale" class="btn purple full">Nueva venta</button></dialog>
+{% endblock %}
+{% block scripts %}<script>window.POS_HAS_SHIFT={{ 'true' if shift else 'false' }};</script><script src="{{ url_for('static', filename='pos.js') }}"></script>{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Panel · {{ store.store_name }}{% endblock %}
+{% block content %}
+<div class="page-heading compact-heading">
+  <div><span class="eyebrow">RESUMEN DEL NEGOCIO</span><h1>Panel</h1><p>{% if shift %}{% if shift.status == 'open' %}Datos del turno actual{% else %}Resumen del último turno{% endif %}{% if shift.event_mode %} · {{ shift.event_name }}{% endif %}{% else %}Abre tu primer turno para comenzar.{% endif %}</p></div>
+  <div class="heading-actions"><a class="btn neon" href="{{ url_for('pos') }}">＋ Nueva venta</a>{% if current_user.role in ['admin','manager'] %}<a class="btn purple" href="{{ url_for('trades') }}">↻ Intercambio</a>{% endif %}</div>
+</div>
+{% if stats %}
+<div class="metric-grid {{ 'five' if current_user.role in ['admin','manager'] else 'four' }}">
+  <div class="metric-card green"><span class="metric-icon">$</span><small>Ventas netas del turno</small><strong>${{ stats.sales_total|money }}</strong><em>{{ stats.transactions }} tickets · {{ stats.refund_count }} devolución(es)</em></div>
+  {% if current_user.role in ['admin','manager'] %}<div class="metric-card purple"><span class="metric-icon">↗</span><small>Ganancia bruta</small><strong>${{ stats.gross_profit|money }}</strong><em>estimada</em></div>{% endif %}
+  <div class="metric-card blue"><span class="metric-icon">▤</span><small>Transacciones</small><strong>{{ stats.transactions }}</strong><em>tickets</em></div>
+  <div class="metric-card yellow"><span class="metric-icon">▣</span><small>Artículos vendidos</small><strong>{{ stats.items }}</strong><em>unidades</em></div>
+  <div class="metric-card green"><span class="metric-icon">▥</span><small>Efectivo esperado</small><strong>${{ stats.expected_cash|money }}</strong><em>en caja</em></div>
+</div>
+
+{% set total = stats.sales_total if stats.sales_total > 0 else 1 %}
+{% set cashpct = (stats.cash_total / total * 100) %}
+{% set cardpct = (stats.card_total / total * 100) %}
+<div class="dashboard-grid fancy">
+  <section class="panel neon-panel payment-panel">
+    <div class="panel-title"><span>RESUMEN DE VENTAS</span><small>Turno #{{ shift.id }}</small></div>
+    <div class="payment-visual">
+      <div class="donut" style="--cash:{{ cashpct }}%;--card:{{ cardpct }}%"><div><strong>${{ stats.sales_total|money }}</strong><span>Total</span></div></div>
+      <div class="payment-legend">
+        <div><i class="legend-dot green"></i><span>Efectivo</span><strong>${{ stats.cash_total|money }}</strong></div>
+        <div><i class="legend-dot purple"></i><span>Tarjeta</span><strong>${{ stats.card_total|money }}</strong></div>
+        <div><i class="legend-dot blue"></i><span>Otro</span><strong>${{ stats.other_total|money }}</strong></div>
+        <div><i class="legend-dot red"></i><span>Descuentos</span><strong>−${{ stats.discounts|money }}</strong></div><div><i class="legend-dot red"></i><span>Devoluciones</span><strong>−${{ stats.refund_total|money }}</strong></div>
+      </div>
+    </div>
+  </section>
+
+  {% if current_user.role in ['admin','manager'] %}
+  <section class="panel neon-panel trade-summary-panel">
+    <div class="panel-title"><span>↻ INTERCAMBIOS</span><a href="{{ url_for('trades') }}">Ver todos</a></div>
+    <div class="trade-kpis"><div><small>Valor de mercado</small><strong>${{ stats.trade_market|money }}</strong></div><div><small>Total ofrecido</small><strong class="purple-text">${{ stats.trade_offer|money }}</strong></div></div>
+    <div class="mini-stats"><span>Operaciones <b>{{ stats.trade_count }}</b></span><span>Efectivo <b>${{ stats.trade_cash|money }}</b></span><span>Crédito <b>${{ stats.trade_credit|money }}</b></span></div>
+  </section>
+  {% endif %}
+
+  <section class="panel neon-panel inventory-panel">
+    <div class="panel-title"><span>▣ INVENTARIO</span><a href="{{ url_for('inventory') }}">Ver todos</a></div>
+    <div class="inventory-kpis"><div><small>SKUs</small><strong>{{ inventory_stats.sku_count }}</strong></div><div><small>Unidades</small><strong>{{ inventory_stats.units }}</strong></div>{% if current_user.role in ['admin','manager'] %}<div><small>Costo total</small><strong>${{ inventory_stats.cost_value|money }}</strong></div>{% endif %}<div><small>Valor de venta</small><strong>${{ inventory_stats.retail_value|money }}</strong></div></div>
+    <h3 class="list-label">Stock bajo</h3>
+    <div class="stock-list">{% for p in low_stock %}<div><span>{{ p.name }}</span><strong class="{% if p.qty <= 1 %}bad-text{% endif %}">Stock: {{ p.qty }}</strong></div>{% else %}<p class="muted">No hay productos con stock bajo.</p>{% endfor %}</div>
+  </section>
+
+  <section class="panel neon-panel top-products-panel">
+    <div class="panel-title"><span>★ TOP PRODUCTOS VENDIDOS</span><a href="{{ url_for('sales') }}">Ventas</a></div>
+    <div class="top-list">{% for p in top_products %}<div class="top-row"><b>{{ loop.index }}</b><span>{{ p.name }}<small>{{ p.qty }} unidades</small></span><strong>${{ p.revenue|money }}</strong></div>{% else %}<p class="muted">Aún no hay ventas en este turno.</p>{% endfor %}</div>
+  </section>
+</div>
+
+<div class="quick-action-row">
+  <a class="quick-action purple" href="{{ url_for('shifts') }}"><span>▣</span><div><strong>Caja y turnos</strong><small>Abrir, cerrar y movimientos</small></div></a>
+  {% if current_user.role in ['admin','manager'] %}<a class="quick-action green" href="{{ url_for('trades') }}"><span>↻</span><div><strong>Intercambio</strong><small>Compra / intercambio {{ (store.trade_credit_rate*100)|round|int }}% · {{ (store.trade_cash_rate*100)|round|int }}%</small></div></a>{% endif %}
+  <a class="quick-action blue" href="{{ url_for('customer_display') }}" target="_blank"><span>▰</span><div><strong>Pantalla cliente</strong><small>Abrir display sincronizado</small></div></a>
+</div>
+{% else %}
+<div class="empty-state panel"><img class="empty-logo" src="{{ url_for('brand_logo') }}" alt=""><h2>La caja está lista para estrenarse</h2><p>Abre un turno para comenzar a registrar ventas, efectivo e intercambios.</p><a class="btn neon" href="{{ url_for('shifts') }}">Abrir turno</a></div>
+{% endif %}
+{% endblock %}
