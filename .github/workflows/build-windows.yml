@@ -7,10 +7,6 @@ jobs:
   windows-installer:
     runs-on: windows-latest
 
-    defaults:
-      run:
-        working-directory: collector-pos-v3.0-desktop-preview
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -28,9 +24,9 @@ jobs:
       - name: Show project files
         shell: powershell
         run: |
-          Write-Host "Current folder:"
+          Write-Host "Current directory:"
           Get-Location
-          Write-Host "Files:"
+          Write-Host "Project files:"
           Get-ChildItem
 
       - name: Build Collector POS
@@ -41,5 +37,5 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: CollectorPOS-Windows-Installer
-          path: collector-pos-v3.0-desktop-preview/dist-installer/*.exe
+          path: dist-installer/*.exe
           if-no-files-found: error
